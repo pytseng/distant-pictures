@@ -28,6 +28,7 @@ var SerialPort = require('serialport'); // serial library
 var Readline = SerialPort.parsers.Readline; // read serial data as lines
 //-- Addition:
 var NodeWebcam = require( "node-webcam" );// load the webcam module
+var Jimp = require("jimp");
 
 //---------------------- WEBAPP SERVER SETUP ---------------------------------//
 // use express to create the simple webapp
@@ -87,7 +88,17 @@ const parser = new Readline({
 serial.pipe(parser);
 parser.on('data', function(data) {
   console.log('Data:', data);
-  io.emit('server-msg', data);
+  if (data=="dark"){
+    var imageName = new Date().toString().replace(/[&\/\\#,+()$~%.'":*?<>{}\s-]/g, '');
+
+    console.log('making a making a picture at'+ imageName); // Second, the name is logged to the console.
+
+    //Third, the picture is  taken and saved to the `public/`` folder
+    NodeWebcam.capture('public/'+imageName, opts, function( err, data ) {
+    io.emit('newPicture',(imageName+'.jpg')); ///Lastly, the new name is send to the client web browser.
+    /// The browser will take this new name and load the picture from the public folder.
+  });
+  io.emit('server-msg', data);}
 });
 //----------------------------------------------------------------------------//
 
