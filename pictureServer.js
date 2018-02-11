@@ -29,6 +29,7 @@ var Readline = SerialPort.parsers.Readline; // read serial data as lines
 //-- Addition:
 var NodeWebcam = require( "node-webcam" );// load the webcam module
 var Jimp = require("jimp");
+const fs = require('fs');
 
 //---------------------- WEBAPP SERVER SETUP ---------------------------------//
 // use express to create the simple webapp
@@ -83,13 +84,13 @@ const serial = new SerialPort(process.argv[2], {});
 const parser = new Readline({
   delimiter: '\r\n'
 });
-
+var imageName;
 // Read data that is available on the serial port and send it to the websocket
 serial.pipe(parser);
 parser.on('data', function(data) {
   console.log('Data:', data);
   if (data=="dark"){
-    var imageName = new Date().toString().replace(/[&\/\\#,+()$~%.'":*?<>{}\s-]/g, '');
+    imageName = new Date().toString().replace(/[&\/\\#,+()$~%.'":*?<>{}\s-]/g, '');
 
     console.log('making a making a picture at'+ imageName); // Second, the name is logged to the console.
 
@@ -100,6 +101,11 @@ parser.on('data', function(data) {
   });
   io.emit('server-msg', data);}
 });
+
+
+
+
+
 //----------------------------------------------------------------------------//
 
 
@@ -137,6 +143,41 @@ io.on('connect', function(socket) {
   });
 
   });
+
+  socket.on('editPicture', function(){
+    console.log('\n\n'+'public/'+imageName+'.jpg'+'\n\n');
+    Jimp.read('public/'+imageName+'.jpg', function (err, lenna) {
+        if (err) throw err;
+        lenna.resize(256, 256)            // resize 
+             .quality(60)                 // set JPEG quality 
+             .greyscale()                 // set greyscale 
+             .write('public/'+'edit-'+imageName+'.jpg'); // save 
+    });    
+    // function checkIfFile(file, cb) {
+    //   fs.stat(file, function fsStat(err, stats) {
+    //     if (err) {
+    //       if (err.code === 'ENOENT') {
+    //         return cb(null, false);
+    //       } else {
+    //         return cb(err);
+    //       }
+    //     }
+    //     return cb(null, stats.isFile());
+    //   });
+    // }
+    // checkIfFile('public/'+imageName, function(err, isFile) {
+    //   if (isFile) {
+    //     Jimp.read('public/'+imageName+'.jpg', function (err, lenna) {
+    //         if (err) throw err;
+    //         lenna.resize(256, 256)            // resize 
+    //              .quality(60)                 // set JPEG quality 
+    //              .greyscale()                 // set greyscale 
+    //              .write("lena-small-bw.jpg"); // save 
+    //     });
+    //   }
+    //   else {console.log("shit");}
+    // });    
+  })
   // if you get the 'disconnect' message, say the user disconnected
   socket.on('disconnect', function() {
     console.log('user disconnected');

@@ -28,7 +28,10 @@ function ledOFF() {
 function takePicture(){
   socket.emit('takePicture');
 }
-
+// 
+function editPicture(){
+  socket.emit('editPicture');
+}
 //-- Addition: This function receives the new image name and applies it to html element.
 
 socket.on('newPicture', function(msg) {
